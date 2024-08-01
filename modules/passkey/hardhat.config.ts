@@ -4,12 +4,14 @@ import dotenv from 'dotenv'
 import type { HardhatUserConfig } from 'hardhat/config'
 import 'hardhat-deploy'
 import { HttpNetworkUserConfig } from 'hardhat/types'
+import { DeterministicDeploymentInfo } from 'hardhat-deploy/dist/types'
+import { getSingletonFactoryInfo } from '@safe-global/safe-singleton-factory'
 import './src/tasks/codesize'
 import './src/tasks/deployContracts'
 import './src/tasks/localVerify'
 
 dotenv.config()
-const { CUSTOM_NODE_URL, MNEMONIC, ETHERSCAN_API_KEY, PK } = process.env
+const { MAINNET_NODE_URL, CALIBRATION_NODE_URL, MNEMONIC, ETHERSCAN_API_KEY, PK } = process.env
 
 const DEFAULT_MNEMONIC = 'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat'
 
@@ -22,14 +24,16 @@ if (PK) {
   }
 }
 
-const customNetwork = CUSTOM_NODE_URL
-  ? {
-      custom: {
-        ...sharedNetworkConfig,
-        url: CUSTOM_NODE_URL,
-      },
-    }
-  : {}
+const customNetwork = {
+  fvmMainnet: {
+    ...sharedNetworkConfig,
+    url: MAINNET_NODE_URL,
+  },
+  fvmCalibration: {
+    ...sharedNetworkConfig,
+    url: CALIBRATION_NODE_URL,
+  },
+}
 
 const compilerSettings = {
   version: '0.8.26',
@@ -89,6 +93,30 @@ const config: HardhatUserConfig = {
   sourcify: {
     enabled: true,
   },
+  deterministicDeployment,
+  gasReporter: {
+    enabled: true,
+  },
+}
+
+function deterministicDeployment(network: string): DeterministicDeploymentInfo {
+  const info = getSingletonFactoryInfo(parseInt(network))
+  if (!info) {
+    throw new Error(`
+      Safe factory not found for network ${network}. You can request a new deployment at https://github.com/safe-global/safe-singleton-factory.
+      For more information, see https://github.com/safe-global/safe-contracts#replay-protection-eip-155
+    `)
+  }
+
+  const gasLimit = BigInt(info.gasLimit)
+  const gasPrice = BigInt(info.gasPrice)
+
+  return {
+    factory: info.address,
+    deployer: info.signerAddress,
+    funding: String(gasLimit * gasPrice),
+    signedTx: info.transaction,
+  }
 }
 
 export default config

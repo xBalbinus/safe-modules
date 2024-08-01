@@ -54,6 +54,8 @@
     "@openzeppelin/contracts": "^5.0.2",
     "@safe-global/safe-4337-local-bundler": "workspace:^0.0.0",
     "@safe-global/safe-4337-provider": "workspace:^0.0.0",
+    "@safe-global/safe-deployments": "^1.37.0",
+    "@safe-global/safe-singleton-factory": "^1.0.25",
     "@types/chai": "^4.3.16",
     "@types/mocha": "^10.0.7",
     "@types/node": "^20.14.10",

@@ -16,12 +16,17 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts }) => {
 
   const { recoveryPeriod } = getDeploymentParameters()
 
-  await deploy('SocialRecoveryModule', {
-    from: deployer,
-    args: [recoveryPeriod],
-    log: true,
-    deterministicDeployment: true,
-  })
+  try {
+    await deploy('SocialRecoveryModule', {
+      from: deployer,
+      args: [recoveryPeriod],
+      log: true,
+      deterministicDeployment: true,
+    })
+  } catch (error) {
+    console.error('Error deploying SocialRecoveryModule:', error)
+    throw error
+  }
 }
 
 export default deploy
